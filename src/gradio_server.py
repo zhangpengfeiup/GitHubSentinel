@@ -57,58 +57,90 @@ def update_model_list(model_type):
 
 
 # 创建 Gradio 界面
-with gr.Blocks(title="GitHubSentinel") as demo:
+with gr.Blocks(title="GitHubSentinel", css=".gradio-container {max-width: 1000px !important;}") as demo:
+    # 添加标题和介绍
+    gr.Markdown("""
+    # GitHubSentinel
+    
+    一个智能的技术项目监控和报告生成工具，帮助您跟踪 GitHub 项目的进展和 Hacker News 的热点话题。
+    
+    ## 功能特点
+    - **GitHub 项目进展**：自动分析并生成指定项目的进展报告
+    - **Hacker News 热点**：实时抓取并总结 Hacker News 的热门话题
+    - **多模型支持**：支持 OpenAI GPT 和 Ollama 本地模型
+    - **自定义报告**：可根据需要调整报告周期和模型参数
+    """)
+
     # 创建 GitHub 项目进展 Tab
-    with gr.Tab("GitHub 项目进展"):
+    with gr.Tab("📊 GitHub 项目进展"):
         gr.Markdown("## GitHub 项目进展")  # 添加小标题
 
-        # 创建 Radio 组件
-        model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务")
+        # 创建表单布局
+        with gr.Row():
+            with gr.Column(scale=1):
+                # 创建 Radio 组件
+                model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务", value="openai")
 
-        # 创建 Dropdown 组件
-        model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型")
+                # 创建 Dropdown 组件
+                model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型", value="gpt-4o-mini")
 
-        # 创建订阅列表的 Dropdown 组件
-        subscription_list = gr.Dropdown(subscription_manager.list_subscriptions(), label="订阅列表", info="已订阅GitHub项目")
+            with gr.Column(scale=1):
+                # 创建订阅列表的 Dropdown 组件
+                subscription_list = gr.Dropdown(subscription_manager.list_subscriptions(), label="订阅列表", info="已订阅GitHub项目")
 
-        # 创建 Slider 组件
-        days = gr.Slider(value=2, minimum=1, maximum=7, step=1, label="报告周期", info="生成项目过去一段时间进展，单位：天")
+                # 创建 Slider 组件
+                days = gr.Slider(value=2, minimum=1, maximum=7, step=1, label="报告周期", info="生成项目过去一段时间进展，单位：天")
 
         # 使用 radio 组件的值来更新 dropdown 组件的选项
         model_type.change(fn=update_model_list, inputs=model_type, outputs=model_name)
 
         # 创建按钮来生成报告
-        button = gr.Button("生成报告")
+        button = gr.Button("🚀 生成报告", variant="primary")
 
         # 设置输出组件
-        markdown_output = gr.Markdown()
-        file_output = gr.File(label="下载报告")
+        with gr.Row():
+            with gr.Column(scale=1):
+                markdown_output = gr.Markdown(label="报告内容")
+            with gr.Column(scale=1):
+                file_output = gr.File(label="下载报告")
 
         # 将按钮点击事件与导出函数绑定
         button.click(generate_github_report, inputs=[model_type, model_name, subscription_list, days], outputs=[markdown_output, file_output])
 
     # 创建 Hacker News 热点话题 Tab
-    with gr.Tab("Hacker News 热点话题"):
+    with gr.Tab("🔥 Hacker News 热点话题"):
         gr.Markdown("## Hacker News 热点话题")  # 添加小标题
 
-        # 创建 Radio 组件
-        model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务")
+        # 创建表单布局
+        with gr.Row():
+            with gr.Column(scale=1):
+                # 创建 Radio 组件
+                model_type = gr.Radio(["openai", "ollama"], label="模型类型", info="使用 OpenAI GPT API 或 Ollama 私有化模型服务", value="openai")
 
-        # 创建 Dropdown 组件
-        model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型")
+                # 创建 Dropdown 组件
+                model_name = gr.Dropdown(choices=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], label="选择模型", value="gpt-4o-mini")
 
         # 使用 radio 组件的值来更新 dropdown 组件的选项
         model_type.change(fn=update_model_list, inputs=model_type, outputs=model_name)
 
         # 创建按钮来生成报告
-        button = gr.Button("生成最新热点话题")
+        button = gr.Button("🚀 生成最新热点话题", variant="primary")
 
         # 设置输出组件
-        markdown_output = gr.Markdown()
-        file_output = gr.File(label="下载报告")
+        with gr.Row():
+            with gr.Column(scale=1):
+                markdown_output = gr.Markdown(label="热点话题")
+            with gr.Column(scale=1):
+                file_output = gr.File(label="下载报告")
 
         # 将按钮点击事件与导出函数绑定
         button.click(generate_hn_hour_topic, inputs=[model_type, model_name,], outputs=[markdown_output, file_output])
+
+    # 添加页脚信息
+    gr.Markdown("""
+    ---  
+    © 2024 GitHubSentinel | 版本 1.0.0
+    """)
 
 
 
