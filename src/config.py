@@ -22,4 +22,10 @@ class Config:
             # 默认每天执行
             self.freq_days = config.get('github_progress_frequency_days', 1)
             # 默认早上8点更新 (操作系统默认时区是 UTC +0，08点刚好对应北京时间凌晨12点)
-            self.exec_time = config.get('github_progress_execution_time', "08:00") 
+            self.exec_time = config.get('github_progress_execution_time', "08:00")
+            
+            # LLM 相关配置
+            self.llm_model_type = config.get('llm_model_type', 'openai')  # 默认使用 openai
+            self.openai_model_name = config.get('openai_model_name', 'gpt-4o-mini')
+            self.ollama_model_name = config.get('ollama_model_name', 'qwen2:1.5b')
+            self.ollama_api_url = config.get('ollama_api_url', 'http://localhost:11434/api/chat') 
