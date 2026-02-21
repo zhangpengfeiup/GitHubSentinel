@@ -5,6 +5,7 @@ import sys  # 导入sys库，用于执行系统相关的操作
 
 from config import Config  # 导入配置管理类
 from github_client import GitHubClient  # 导入GitHub客户端类，处理GitHub API请求
+from hacker_news_client import HackerNewsClient  # 导入Hacker News客户端类
 from notifier import Notifier  # 导入通知器类，用于发送通知
 from report_generator import ReportGenerator  # 导入报告生成器类
 from llm import LLM  # 导入语言模型类，可能用于生成报告内容
@@ -30,24 +31,41 @@ def github_job(subscription_manager, github_client, report_generator, notifier, 
     LOG.info(f"[定时任务执行完毕]")
 
 
+def hacker_news_job(hacker_news_client, report_generator, notifier):
+    LOG.info("[开始执行 Hacker News 趋势报告任务]")
+    # 导出 Hacker News 热门话题
+    markdown_file_path = hacker_news_client.export_top_stories()
+    # 生成 Hacker News 趋势报告
+    report, report_file_path = report_generator.generate_hacker_news_report(markdown_file_path)
+    notifier.notify("Hacker News 趋势", report)
+    LOG.info(f"[Hacker News 趋势报告任务执行完毕]")
+
+
 def main():
     # 设置信号处理器
     signal.signal(signal.SIGTERM, graceful_shutdown)
 
     config = Config()  # 创建配置实例
     github_client = GitHubClient(config.github_token)  # 创建GitHub客户端实例
+    hacker_news_client = HackerNewsClient()  # 创建Hacker News客户端实例
     notifier = Notifier(config.email)  # 创建通知器实例
-    llm = LLM()  # 创建语言模型实例
+    llm = LLM(config)  # 创建语言模型实例，传入config参数
     report_generator = ReportGenerator(llm)  # 创建报告生成器实例
     subscription_manager = SubscriptionManager(config.subscriptions_file)  # 创建订阅管理器实例
 
     # 启动时立即执行（如不需要可注释）
     github_job(subscription_manager, github_client, report_generator, notifier, config.freq_days)
+    hacker_news_job(hacker_news_client, report_generator, notifier)  # 执行 Hacker News 趋势报告任务
 
     # 安排每天的定时任务
     schedule.every(config.freq_days).days.at(
         config.exec_time
     ).do(github_job, subscription_manager, github_client, report_generator, notifier, config.freq_days)
+    
+    # 安排 Hacker News 趋势报告定时任务（每天执行一次）
+    schedule.every(config.freq_days).days.at(
+        config.exec_time
+    ).do(hacker_news_job, hacker_news_client, report_generator, notifier)
 
     try:
         # 在守护进程中持续运行
